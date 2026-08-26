@@ -1,0 +1,154 @@
+# -*- coding: utf-8 -*-
+"""
+PUBLIC METHOD-FLOW TEMPLATE — FOUR-ALGORITHM ANALYSIS
+====================================================
+
+Purpose
+-------
+This file shows only the high-level modelling workflow. It is intentionally
+non-executable and is NOT the complete analysis code used to generate the
+reported results.
+
+The following private components are deliberately NOT distributed:
+    * source-data path, schema, variable names and outcome definition;
+    * cohort inclusion/exclusion and data-quality rules;
+    * definitions and membership of all predictor models;
+    * preprocessing, encoding, imputation and scaling specifications;
+    * algorithm implementations and all hyperparameters;
+    * random seeds, number of resamples and resampling schedule;
+    * probability calibration and decision-threshold rules;
+    * exact AUC/NRI/IDI and P-value implementations;
+    * intermediate predictions, fitted objects and result values.
+
+Accordingly, this template cannot reproduce the study results without the
+project's private runtime package and frozen configuration.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any, Iterable, Mapping, Protocol, Sequence
+
+
+@dataclass(frozen=True)
+class Resample:
+    """Opaque training/validation index container supplied privately."""
+
+    training_index: Any
+    validation_index: Any
+    private_id: str
+
+
+class PrivateProjectRuntime(Protocol):
+    """Interface contract; implementation is retained in the private project."""
+
+    def load_analysis_data(self) -> tuple[Any, Any]: ...
+
+    def validate_private_schema(self, data: Any, outcome: Any) -> None: ...
+
+    def get_private_model_definitions(self) -> Mapping[str, Sequence[str]]: ...
+
+    def get_private_algorithm_registry(self) -> Mapping[str, Any]: ...
+
+    def generate_validation_resamples(self, outcome: Any) -> Iterable[Resample]: ...
+
+    def build_private_pipeline(
+        self,
+        algorithm_key: str,
+        model_key: str,
+        training_outcome: Any,
+        private_resample_id: str,
+    ) -> Any: ...
+
+    def fit_private_pipeline(
+        self,
+        pipeline: Any,
+        training_data: Any,
+        training_outcome: Any,
+    ) -> Any: ...
+
+    def predict_probability(self, fitted_pipeline: Any, validation_data: Any) -> Any: ...
+
+    def record_oob_predictions(self, **record: Any) -> None: ...
+
+    def aggregate_subject_oob_predictions(self) -> Any: ...
+
+    def calculate_required_performance(self, predictions: Any) -> Any: ...
+
+    def calculate_within_algorithm_pairwise_statistics(self, predictions: Any) -> Any: ...
+
+    def export_summary_outputs(self, performance: Any, comparisons: Any) -> None: ...
+
+
+def load_private_runtime() -> PrivateProjectRuntime:
+    """
+    Load the private project package.
+
+    The real import path, configuration loader, cryptographic manifest and
+    credentials are intentionally excluded from the public template.
+    """
+
+    raise RuntimeError(
+        "Private project runtime is not distributed with this method-flow template."
+    )
+
+
+def run_four_algorithm_workflow(runtime: PrivateProjectRuntime) -> None:
+    """High-level Bootstrap/OOB workflow without reproducible implementation details."""
+
+    data, outcome = runtime.load_analysis_data()
+    runtime.validate_private_schema(data, outcome)
+
+    model_definitions = runtime.get_private_model_definitions()
+    algorithm_registry = runtime.get_private_algorithm_registry()
+    selected_algorithms = (
+        "random_forest",
+        "elastic_net_logistic_regression",
+        "hist_gradient_boosting",
+        "k_nearest_neighbors",
+    )
+
+    # The private runtime verifies the intended counts and identifiers.
+    for resample in runtime.generate_validation_resamples(outcome):
+        training_outcome = outcome[resample.training_index]
+
+        for algorithm_key in selected_algorithms:
+            for model_key, private_features in model_definitions.items():
+                pipeline = runtime.build_private_pipeline(
+                    algorithm_key=algorithm_key,
+                    model_key=model_key,
+                    training_outcome=training_outcome,
+                    private_resample_id=resample.private_id,
+                )
+
+                fitted_pipeline = runtime.fit_private_pipeline(
+                    pipeline=pipeline,
+                    training_data=data.loc[resample.training_index, private_features],
+                    training_outcome=training_outcome,
+                )
+
+                probability = runtime.predict_probability(
+                    fitted_pipeline,
+                    data.loc[resample.validation_index, private_features],
+                )
+
+                runtime.record_oob_predictions(
+                    private_resample_id=resample.private_id,
+                    algorithm_key=algorithm_key,
+                    model_key=model_key,
+                    validation_index=resample.validation_index,
+                    probability=probability,
+                )
+
+    subject_level_oob = runtime.aggregate_subject_oob_predictions()
+    performance = runtime.calculate_required_performance(subject_level_oob)
+    comparisons = runtime.calculate_within_algorithm_pairwise_statistics(
+        subject_level_oob
+    )
+    runtime.export_summary_outputs(performance, comparisons)
+
+
+if __name__ == "__main__":
+    # This guard documents the intended entry point while preventing the public
+    # template from being presented as a reproducible analysis program.
+    run_four_algorithm_workflow(load_private_runtime())
