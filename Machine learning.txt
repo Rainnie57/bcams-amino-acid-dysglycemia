@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-PUBLIC METHOD-FLOW TEMPLATE — SIX-ALGORITHM ANALYSIS
+PUBLIC METHOD-FLOW TEMPLATE — FOUR-ALGORITHM ANALYSIS
 ====================================================
 
 Purpose
@@ -93,7 +93,7 @@ def load_private_runtime() -> PrivateProjectRuntime:
     )
 
 
-def run_six_algorithm_workflow(runtime: PrivateProjectRuntime) -> None:
+def run_four_algorithm_workflow(runtime: PrivateProjectRuntime) -> None:
     """High-level Bootstrap/OOB workflow without reproducible implementation details."""
 
     data, outcome = runtime.load_analysis_data()
@@ -101,12 +101,18 @@ def run_six_algorithm_workflow(runtime: PrivateProjectRuntime) -> None:
 
     model_definitions = runtime.get_private_model_definitions()
     algorithm_registry = runtime.get_private_algorithm_registry()
+    selected_algorithms = (
+        "random_forest",
+        "elastic_net_logistic_regression",
+        "hist_gradient_boosting",
+        "k_nearest_neighbors",
+    )
 
     # The private runtime verifies the intended counts and identifiers.
     for resample in runtime.generate_validation_resamples(outcome):
         training_outcome = outcome[resample.training_index]
 
-        for algorithm_key in algorithm_registry:
+        for algorithm_key in selected_algorithms:
             for model_key, private_features in model_definitions.items():
                 pipeline = runtime.build_private_pipeline(
                     algorithm_key=algorithm_key,
@@ -145,5 +151,4 @@ def run_six_algorithm_workflow(runtime: PrivateProjectRuntime) -> None:
 if __name__ == "__main__":
     # This guard documents the intended entry point while preventing the public
     # template from being presented as a reproducible analysis program.
-    run_six_algorithm_workflow(load_private_runtime())
-
+    run_four_algorithm_workflow(load_private_runtime())
